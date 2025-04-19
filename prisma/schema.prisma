@@ -1,0 +1,79 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  image         String?
+  role          Role      @default(STUDENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  courses       Course[]  @relation("TutorCourses")
+  enrollments   Enrollment[]
+  messages      Message[]
+}
+
+enum Role {
+  STUDENT
+  TUTOR
+}
+
+model Course {
+  id            String    @id @default(cuid())
+  title         String
+  description   String
+  thumbnail     String?
+  price         Float     @default(0)
+  tutorId       String
+  tutor         User      @relation("TutorCourses", fields: [tutorId], references: [id])
+  videos        Video[]
+  enrollments   Enrollment[]
+  messages      Message[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Video {
+  id            String    @id @default(cuid())
+  title         String
+  url           String
+  transcript    String?
+  courseId      String
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  order         Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Enrollment {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress      Float     @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([userId, courseId])
+}
+
+model Message {
+  id            String    @id @default(cuid())
+  content       String
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+}
